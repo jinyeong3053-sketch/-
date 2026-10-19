@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 여행비서 - 스마트 맞춤 여행 플래너</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans antialiased">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
+        <div class="max-w-5xl mx-auto px-4 py-6 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid font-bold fa-plane-departure text-3xl text-amber-300"></i>
+                <h1 class="text-2xl font-bold tracking-tight">AI 여행비서</h1>
+            </div>
+            <button id="openKeyModalBtn" class="bg-white/20 hover:bg-white/30 text-white text-sm px-4 py-2 rounded-lg transition duration-200 backdrop-blur-sm flex items-center gap-2">
+                <i class="fa-solid fa-key"></i> API 키 설정
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Input Form -->
+        <section class="md:col-span-5 bg-white rounded-2xl p-6 shadow-sm border border-slate-100 h-fit">
+            <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-blue-600"></i> 여행 조건 입력
+            </h2>
+
+            <form id="travelForm" onsubmit="handlePlanSubmit(event)" class="space-y-5">
+                <!-- 여행지 -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">여행 도시 (영문 추천)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-location-dot absolute left-3 top-3.5 text-slate-400"></i>
+                        <input type="text" id="destination" placeholder="예: Seoul, Tokyo, Paris, Jeju" required
+                            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                <!-- 오늘의 기분 (드롭다운) -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">오늘의 기분</label>
+                    <select id="mood" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                        <option value="">기분을 선택하세요</option>
+                        <option value="excited">🎉 설레고 신남</option>
+                        <option value="relaxed">🌿 여유롭고 힐링하고 싶음</option>
+                        <option value="adventurous">🎒 활기차고 도전적임</option>
+                        <option value="romantic">💖 감성적이고 로맨틱함</option>
+                        <option value="tired">☕ 지쳐서 쉬고 싶음</option>
+                    </select>
+                </div>
+
+                <!-- 관심사 (체크박스) -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">관심사 (다중 선택 가능)</label>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <label class="flex items-center space-x-2 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                            <input type="checkbox" name="interests" value="nature" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>🌳 자연 / 풍경</span>
+                        </label>
+                        <label class="flex items-center space-x-2 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                            <input type="checkbox" name="interests" value="food" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>🍝 미식 / 맛집</span>
+                        </label>
+                        <label class="flex items-center space-x-2 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                            <input type="checkbox" name="interests" value="shopping" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>🛍️ 쇼핑 / 핫플</span>
+                        </label>
+                        <label class="flex items-center space-x-2 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                            <input type="checkbox" name="interests" value="culture" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>🏛️ 문화 / 역사</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 예산 -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">예산 범위</label>
+                    <select id="budget" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                        <option value="low">💵 가성비 (실속형)</option>
+                        <option value="medium" selected>💳 적당하게 (표준형)</option>
+                        <option value="high">💎 럭셔리 (프리미엄)</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition duration-200 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> 여행지 추천받기
+                </button>
+            </form>
+        </section>
+
+        <!-- Right Column: Results Section -->
+        <section class="md:col-span-7 space-y-6">
+            
+            <!-- Default Placeholder State -->
+            <div id="placeholderState" class="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm">
+                <div class="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <i class="fa-solid fa-compass"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700 mb-2">나만의 특별한 여행 계획을 만들어보세요</h3>
+                <p class="text-slate-500 text-sm max-w-md mx-auto">왼쪽 폼에 여행지, 기분, 관심사를 입력하면 실시간 날씨 정보와 맞춤 추천 장소를 생성해 드립니다.</p>
+            </div>
+
+            <!-- Loading State (Hidden by default) -->
+            <div id="loadingState" class="hidden bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm">
+                <div class="animate-spin text-blue-600 text-4xl mb-4 mx-auto w-fit">
+                    <i class="fa-solid fa-spinner"></i>
+                </div>
+                <p class="text-slate-700 font-semibold">실시간 날씨와 추천 장소를 분석하고 있습니다...</p>
+            </div>
+
+            <!-- Content Result Container (Hidden by default) -->
+            <div id="resultContent" class="hidden space-y-6">
+
+                <!-- Weather Card -->
+                <div class="bg-gradient-to-br from-indigo-500 via-blue-500 to-sky-400 text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <span id="resCity" class="text-xs uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full font-semibold">Seoul</span>
+                            <h3 class="text-3xl font-bold mt-2" id="resTemp">22°C</h3>
+                            <p class="text-blue-100 text-sm mt-1" id="resWeatherDesc">맑음 (Clear Sky)</p>
+                        </div>
+                        <div id="weatherIconContainer" class="text-5xl text-amber-300">
+                            <i class="fa-solid fa-sun"></i>
+                        </div>
+                    </div>
+                    <!-- Outfit Tip -->
+                    <div class="mt-4 pt-4 border-t border-white/20 flex items-center gap-2 text-sm bg-black/10 px-3 py-2 rounded-lg">
+                        <i class="fa-solid fa-shirt text-amber-300"></i>
+                        <span id="outfitTip">오늘 날씨엔 가벼운 셔츠나 겉옷을 추천합니다.</span>
+                    </div>
+                </div>
+
+                <!-- Recommendation Cards -->
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-star text-amber-400"></i> 추천 맞춤 코스 Top 3
+                    </h3>
+
+                    <div class="space-y-4" id="recommendationCards">
+                        <!-- Cards dynamically populated via JS -->
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </main>
+
+    <!-- API Key Modal -->
+    <div id="keyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">OpenWeatherMap API Key 설정</h3>
+                <button id="closeKeyModalBtn" class="text-slate-400 hover:text-slate-600 text-xl">&times;</button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">실시간 날씨 검색을 사용하려면 OpenWeatherMap 무료 API Key를 입력하세요. (발급 후 최대 2시간 활성화 대기 필요)</p>
+            <input type="text" id="apiKeyInput" placeholder="API Key 입력 (예: 8b7a...)" class="w-full px-4 py-2.5 border rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <div class="flex gap-2">
+                <button onclick="saveApiKey()" class="flex-1 bg-blue-600 text-white font-medium py-2.5 rounded-xl hover:bg-blue-700 transition">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        let apiKey = localStorage.getItem('OWM_API_KEY') || '';
+
+        document.getElementById('openKeyModalBtn').addEventListener('click', () => {
+            document.getElementById('apiKeyInput').value = apiKey;
+            document.getElementById('keyModal').classList.remove('hidden');
+        });
+
+        document.getElementById('closeKeyModalBtn').addEventListener('click', () => {
+            document.getElementById('keyModal').classList.add('hidden');
+        });
+
+        function saveApiKey() {
+            const val = document.getElementById('apiKeyInput').value.trim();
+            if (val) {
+                apiKey = val;
+                localStorage.setItem('OWM_API_KEY', val);
+                alert('API 키가 저장되었습니다.');
+                document.getElementById('keyModal').classList.add('hidden');
+            }
+        }
+
+        async function handlePlanSubmit(event) {
+            event.preventDefault();
+
+            const destination = document.getElementById('destination').value.trim();
+            const mood = document.getElementById('mood').value;
+            const budget = document.getElementById('budget').value;
+            
+            const selectedInterests = Array.from(document.querySelectorAll('input[name="interests"]:checked'))
+                .map(el => el.value);
+
+            // Toggle Loading UI
+            document.getElementById('placeholderState').classList.add('hidden');
+            document.getElementById('resultContent').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+
+            try {
+                // Fetch Weather Data
+                let weatherData = null;
+                if (apiKey) {
+                    weatherData = await fetchWeatherData(destination);
+                }
+
+                // Render Results
+                renderResults(destination, weatherData, mood, selectedInterests, budget);
+
+            } catch (err) {
+                console.error(err);
+                alert('날씨 정보를 불러오는 도중 오류가 발생했습니다. 도시명을 확인하거나 API 키를 등록해주세요.');
+            } finally {
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('resultContent').classList.remove('hidden');
+            }
+        }
+
+        async function fetchWeatherData(city) {
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric&lang=kr`;
+            const res = await fetch(url);
+            if (!res.ok) {
+                if (res.status === 401) {
+                    throw new Error("Invalid API Key");
+                }
+                throw new Error("City not found");
+            }
+            return await res.json();
+        }
+
+        function renderResults(city, weather, mood, interests, budget) {
+            // Weather Section Update
+            const cityEl = document.getElementById('resCity');
+            const tempEl = document.getElementById('resTemp');
+            const descEl = document.getElementById('resWeatherDesc');
+            const tipEl = document.getElementById('outfitTip');
+
+            if (weather && weather.main) {
+                const temp = Math.round(weather.main.temp);
+                cityEl.innerText = `${weather.name}, ${weather.sys.country}`;
+                tempEl.innerText = `${temp}°C`;
+                descEl.innerText = weather.weather[0].description;
+                tipEl.innerText = getOutfitTip(temp);
+            } else {
+                cityEl.innerText = city;
+                tempEl.innerText = `--°C`;
+                descEl.innerText = '날씨 정보 미연동 (API Key 필요)';
+                tipEl.innerText = '기온 및 가벼운 복장을 준비해보세요.';
+            }
+
+            // Recommendation Recommendations (3 Places)
+            const cardsContainer = document.getElementById('recommendationCards');
+            cardsContainer.innerHTML = '';
+
+            const recommendations = generatePlaces(city, mood, interests);
+
+            recommendations.forEach(place => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition duration-200";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="${place.badgeColor} text-xs font-semibold px-2.5 py-1 rounded-full">${place.category}</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-lg mb-1">${place.name}</h4>
+                    <p class="text-slate-600 text-sm mb-3"><i class="fa-solid fa-circle-info text-blue-500 mr-1"></i> ${place.reason}</p>
+                `;
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        function getOutfitTip(temp) {
+            if (temp >= 28) return "날씨가 덥습니다. 얇은 반팔과 썬크림, 선글라스를 지참하세요.";
+            if (temp >= 20) return "활동하기 좋은 날씨입니다. 얇은 겉옷이나 셔츠를 추천합니다.";
+            if (temp >= 10) return "쌀쌀할 수 있으니 트렌치코트나 자켓, 가디건을 챙기세요.";
+            return "추운 날씨입니다. 두꺼운 코트나 패딩, 목도리를 챙겨 체온을 유지하세요.";
+        }
+
+        function generatePlaces(city, mood, interests) {
+            return [
+                {
+                    category: "🔥 핫플레이스",
+                    badgeColor: "bg-rose-50 text-rose-600",
+                    name: `${city} 중심가 트렌디 스팟`,
+                    reason: "요즘 인스타그램 및 SNS에서 가장 떠오르는 대표 상권과 인프라를 한눈에 즐길 수 있습니다."
+                },
+                {
+                    category: "🌿 힐링 스팟",
+                    badgeColor: "bg-emerald-50 text-emerald-600",
+                    name: `${city} 대표 자연공원 & 산책로`,
+                    reason: "복잡한 도시에서 벗어나 자연의 음이온을 느끼며 여유로운 산책과 휴식을 즐길 수 있는 최고의 장소입니다."
+                },
+                {
+                    category: "🍲 로컬 맛집",
+                    badgeColor: "bg-amber-50 text-amber-600",
+                    name: `${city} 로컬 스트리트 푸드 & 대표 맛집`,
+                    reason: "현지인들이 줄 서서 먹는 대표 시그니처 메뉴와 전통적 미식을 깊이 있게 체험할 수 있습니다."
+                }
+            ];
+        }
+    </script>
+</body>
+</html>
